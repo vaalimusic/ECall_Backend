@@ -22,6 +22,8 @@ curl -fsSL https://raw.githubusercontent.com/vaalimusic/ECall_Backend/main/scrip
 
 The script installs Docker, clones the repository into `/opt/ecall-backend`, creates `.env`, starts Docker Compose, runs migrations and uses Caddy to issue HTTPS certificates automatically.
 
+If Caddy logs show DNS errors for Let's Encrypt, Docker is probably passing `127.0.0.53` into containers. The compose file pins public DNS resolvers for `app`, `caddy` and `prometheus`.
+
 Manual update after changes are pushed:
 
 ```bash

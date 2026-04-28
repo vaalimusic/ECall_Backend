@@ -30,6 +30,9 @@ services:
 
   app:
     build: .
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     depends_on:
       postgres:
         condition: service_healthy
@@ -44,6 +47,9 @@ services:
 
   caddy:
     image: caddy:2.8-alpine
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     depends_on:
       - app
     ports:
@@ -56,6 +62,9 @@ services:
 
   prometheus:
     image: prom/prometheus:v2.55.0
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
