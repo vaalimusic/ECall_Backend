@@ -43,6 +43,22 @@ install_docker() {
   systemctl enable --now docker
 }
 
+fix_docker_networking() {
+  log "Ensuring Docker containers have outbound network access"
+
+  sysctl -w net.ipv4.ip_forward=1 >/dev/null
+  cat > /etc/sysctl.d/99-ecall-docker-forward.conf <<EOF_SYSCTL
+net.ipv4.ip_forward=1
+EOF_SYSCTL
+
+  if command -v ufw >/dev/null 2>&1; then
+    ufw default allow routed || true
+  fi
+
+  iptables -P FORWARD ACCEPT || true
+  systemctl restart docker
+}
+
 fetch_repo() {
   log "Fetching repository into ${INSTALL_DIR}"
   if [ -d "${INSTALL_DIR}/.git" ]; then
@@ -130,6 +146,7 @@ start_stack() {
 }
 
 install_docker
+fix_docker_networking
 fetch_repo
 write_env
 write_caddy_config

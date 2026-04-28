@@ -24,6 +24,18 @@ The script installs Docker, clones the repository into `/opt/ecall-backend`, cre
 
 If Caddy logs show DNS errors for Let's Encrypt, Docker is probably passing `127.0.0.53` into containers. The compose file pins public DNS resolvers for `app`, `caddy` and `prometheus`.
 
+If Caddy logs show `network is unreachable` from inside the container, enable Docker forwarding on the server:
+
+```bash
+sudo sysctl -w net.ipv4.ip_forward=1
+echo net.ipv4.ip_forward=1 | sudo tee /etc/sysctl.d/99-ecall-docker-forward.conf
+sudo ufw default allow routed
+sudo iptables -P FORWARD ACCEPT
+sudo systemctl restart docker
+cd /opt/ecall-backend
+sudo docker compose up -d
+```
+
 Manual update after changes are pushed:
 
 ```bash
