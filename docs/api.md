@@ -5,7 +5,7 @@
 Connect with JWT access token:
 
 ```text
-wss://ecall.everty.ru/socket/websocket?token=<signed-token>&vsn=2.0.0
+wss://ecall.everty.ru/socket/websocket?token=<JWT_ACCESS_TOKEN>&vsn=2.0.0
 ```
 
 Channels:
@@ -63,8 +63,36 @@ Example ICE payload:
 ## REST
 
 - `GET /api/health`
+- `POST /api/auth/register` with `{"email":"user@example.com","password":"secret123","display_name":"User"}`
+- `POST /api/auth/login` with `{"email":"user@example.com","password":"secret123"}`
+- `POST /api/auth/refresh` with `{"refresh_token":"..."}`
+- `POST /api/auth/logout` with `{"refresh_token":"..."}`
+- `GET /api/auth/me`
 - `GET /api/conversations/:user_id/:peer_id/messages?limit=50`
-- `POST /api/messages` with `{"from":"1","to":"2","body":"hello"}`
+- `POST /api/messages` with `{"to":"2","body":"hello"}`
 - `GET /api/users/:user_id/calls?limit=50`
 - `POST /api/users/:user_id/device_tokens` with `{"token":"...","platform":"ios"}`
 - `GET /metrics`
+
+All endpoints except `health`, `metrics`, `auth/register`, `auth/login`, `auth/refresh` and `auth/logout` require:
+
+```text
+Authorization: Bearer <JWT_ACCESS_TOKEN>
+```
+
+Auth response:
+
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "phone": null,
+    "display_name": "User"
+  },
+  "access_token": "jwt",
+  "token_type": "Bearer",
+  "expires_at": "2026-04-28T22:00:00Z",
+  "refresh_token": "opaque-refresh-token"
+}
+```

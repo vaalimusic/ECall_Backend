@@ -5,6 +5,7 @@ defmodule Ecall.Auth.Token do
   def token_config do
     default_claims(default_exp: 60 * 60)
     |> add_claim("sub", fn -> nil end, &is_binary/1)
+    |> add_claim("typ", fn -> "access" end, &(&1 == "access"))
   end
 
   def generate(user_id, extra_claims \\ %{}) do

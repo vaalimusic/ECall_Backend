@@ -36,6 +36,7 @@ defmodule Ecall.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.4"},
       {:joken, "~> 2.6"},
+      {:argon2_elixir, "~> 4.0"},
       {:plug_cowboy, "~> 2.7"},
       {:cors_plug, "~> 3.0"},
       {:prom_ex, "~> 1.9"},

@@ -4,9 +4,15 @@ defmodule EcallWeb.CallController do
   alias Ecall.Calls
 
   def index(conn, %{"user_id" => user_id} = params) do
-    limit = params |> Map.get("limit", "50") |> String.to_integer()
-    calls = Calls.list_for_user(user_id, min(limit, 200))
-    json(conn, %{data: Enum.map(calls, &call_json/1)})
+    if conn.assigns.current_user.id == user_id do
+      limit = params |> Map.get("limit", "50") |> String.to_integer()
+      calls = Calls.list_for_user(user_id, min(limit, 200))
+      json(conn, %{data: Enum.map(calls, &call_json/1)})
+    else
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "forbidden"})
+    end
   end
 
   defp call_json(call) do

@@ -2,7 +2,20 @@
 
 ## WebSocket Auth
 
-The server expects a JWT access token with `sub=<user_id>`. A Phoenix signed token is also accepted for test tooling. For local load tests only, set `ALLOW_INSECURE_SOCKET_AUTH=true` and pass `user_id` directly.
+Register or login first:
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+```
+
+```json
+{"email":"user@example.com","password":"secret123"}
+```
+
+Use the returned `access_token` for REST and WebSocket. The JWT contains `sub=<user_id>` and expires after 1 hour. Use `refresh_token` with `/api/auth/refresh` to rotate and receive a new token pair.
+
+A Phoenix signed token is also accepted for test tooling. For local load tests only, set `ALLOW_INSECURE_SOCKET_AUTH=true` and pass `user_id` directly.
 
 ## WebRTC Flow
 
