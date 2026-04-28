@@ -5,28 +5,47 @@ defmodule Ecall.Calls do
   alias Ecall.Repo
 
   @timeout_ms 30_000
+  @active_statuses [:initiated, :ringing, :accepted]
 
   def initiate(caller_id, %{"to" => callee_id, "media" => media}) when media in ["audio", "video"] do
+    caller_id = to_string(caller_id)
+    callee_id = to_string(callee_id)
+    media_type = media_type(media)
+
+    if caller_id == callee_id do
+      {:error, :cannot_call_self}
+    else
+      do_initiate(caller_id, callee_id, media_type)
+    end
+  end
+
+  def initiate(_caller_id, _payload), do: {:error, :invalid_payload}
+
+  defp do_initiate(caller_id, callee_id, media_type) do
     attrs = %{
-      caller_id: to_string(caller_id),
-      callee_id: to_string(callee_id),
-      media_type: media_type(media),
+      caller_id: caller_id,
+      callee_id: callee_id,
+      media_type: media_type,
       status: :ringing,
       started_at: DateTime.utc_now()
     }
 
     Repo.transaction(fn ->
-      call =
-        %Call{}
-        |> Call.changeset(attrs)
-        |> Repo.insert!()
+      case active_between(caller_id, callee_id, media_type) do
+        %Call{} = call ->
+          {:reused, call}
 
-      Registry.start_call(call.id, call.caller_id, call.callee_id, @timeout_ms)
-      call
+        nil ->
+          call =
+            %Call{}
+            |> Call.changeset(attrs)
+            |> Repo.insert!()
+
+          Registry.start_call(call.id, call.caller_id, call.callee_id, @timeout_ms)
+          {:created, call}
+      end
     end)
   end
-
-  def initiate(_caller_id, _payload), do: {:error, :invalid_payload}
 
   def list_for_user(user_id, limit \\ 50) do
     Call
@@ -113,4 +132,19 @@ defmodule Ecall.Calls do
   defp duration_seconds(answered_at, ended_at), do: DateTime.diff(ended_at, answered_at, :second)
   defp media_type("audio"), do: :audio
   defp media_type("video"), do: :video
+
+  defp active_between(caller_id, callee_id, media_type) do
+    Call
+    |> where([c], c.status in ^@active_statuses)
+    |> where([c], c.media_type == ^media_type)
+    |> where(
+      [c],
+      (c.caller_id == ^caller_id and c.callee_id == ^callee_id) or
+        (c.caller_id == ^callee_id and c.callee_id == ^caller_id)
+    )
+    |> order_by([c], desc: c.inserted_at)
+    |> limit(1)
+    |> lock("FOR UPDATE")
+    |> Repo.one()
+  end
 end

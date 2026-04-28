@@ -37,6 +37,8 @@ A Phoenix signed token is also accepted for test tooling. For local load tests o
 
 The backend does not terminate media. It relays signaling only; browsers or mobile SDKs send media P2P through STUN/TURN.
 
+The client must join only the current `call:{call_id}` once per call screen. Repeated joins to many different `call_id` values usually mean the app is repeatedly calling `call:initiate` or recreating the call screen/socket subscription. The backend reuses an active call for the same two users, but the client should still debounce the call button and leave the channel after `call:end`.
+
 ## Example SDP
 
 ```json

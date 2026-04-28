@@ -27,10 +27,14 @@ defmodule EcallWeb.UserChannel do
 
   @impl true
   def handle_in("call:initiate", payload, socket) do
-    with {:ok, call} <- Calls.initiate(socket.assigns.user_id, payload) do
+    with {:ok, {state, call}} <- Calls.initiate(socket.assigns.user_id, payload) do
       event = %{"call_id" => call.id, "from" => call.caller_id, "media" => call.media_type}
-      EcallWeb.Endpoint.broadcast("user:#{call.callee_id}", "call:ringing", event)
-      maybe_push_incoming_call(call)
+
+      if state == :created do
+        EcallWeb.Endpoint.broadcast("user:#{call.callee_id}", "call:ringing", event)
+        maybe_push_incoming_call(call)
+      end
+
       {:reply, {:ok, event}, socket}
     else
       {:error, reason} -> {:reply, {:error, %{reason: inspect(reason)}}, socket}

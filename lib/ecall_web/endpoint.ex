@@ -2,7 +2,7 @@ defmodule EcallWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ecall
 
   socket "/socket", EcallWeb.UserSocket,
-    websocket: [connect_info: [:peer_data, :x_headers]],
+    websocket: [connect_info: [:peer_data, :x_headers], log: false],
     longpoll: false
 
   plug Plug.RequestId
