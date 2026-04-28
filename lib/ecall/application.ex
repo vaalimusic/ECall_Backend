@@ -4,11 +4,11 @@ defmodule Ecall.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      EcallWeb.Telemetry,
       Ecall.Repo,
       {Phoenix.PubSub, name: Ecall.PubSub},
       EcallWeb.Presence,
       Ecall.Calls.Registry,
+      EcallWeb.Telemetry,
       {Finch, name: Ecall.Finch},
       EcallWeb.Endpoint
     ]

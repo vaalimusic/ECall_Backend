@@ -11,14 +11,15 @@ defmodule Ecall.Calls.Registry do
     GenServer.call(__MODULE__, {:start_call, call_id, caller_id, callee_id, timeout_ms})
   end
 
-  def active_count, do: GenServer.call(__MODULE__, :count)
+  def active_count do
+    if Process.whereis(__MODULE__), do: GenServer.call(__MODULE__, :count), else: 0
+  end
   def join(call_id, user_id), do: GenServer.cast(__MODULE__, {:join, call_id, user_id})
   def leave(call_id, user_id), do: GenServer.cast(__MODULE__, {:leave, call_id, user_id})
   def update_status(call_id, status), do: GenServer.cast(__MODULE__, {:status, call_id, status})
 
   def emit_metrics do
-    count = GenServer.call(__MODULE__, :count)
-    :telemetry.execute([:ecall, :calls, :active], %{count: count}, %{})
+    :telemetry.execute([:ecall, :calls, :active], %{count: active_count()}, %{})
   end
 
   @impl true
