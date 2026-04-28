@@ -33,7 +33,8 @@ sudo ufw default allow routed
 sudo iptables -P FORWARD ACCEPT
 sudo systemctl restart docker
 cd /opt/ecall-backend
-sudo docker compose up -d
+sudo docker compose down --remove-orphans
+sudo docker compose up -d --remove-orphans
 ```
 
 Manual update after changes are pushed:

@@ -51,6 +51,18 @@ fix_docker_networking() {
 net.ipv4.ip_forward=1
 EOF_SYSCTL
 
+  mkdir -p /etc/docker
+  if [ ! -f /etc/docker/daemon.json ]; then
+    cat > /etc/docker/daemon.json <<EOF_DOCKER
+{
+  "iptables": true,
+  "ip-forward": true,
+  "ip-masq": true,
+  "dns": ["1.1.1.1", "8.8.8.8"]
+}
+EOF_DOCKER
+  fi
+
   if command -v ufw >/dev/null 2>&1; then
     ufw default allow routed || true
   fi
@@ -128,7 +140,8 @@ open_firewall_ports() {
 start_stack() {
   log "Building and starting services"
   cd "${INSTALL_DIR}"
-  docker compose up -d --build
+  docker compose down --remove-orphans || true
+  docker compose up -d --build --remove-orphans
 
   log "Running database migrations"
   docker compose exec -T app /app/bin/ecall eval "Ecall.Release.migrate()"
