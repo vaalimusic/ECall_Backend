@@ -1,0 +1,8 @@
+defmodule EcallWeb.HealthControllerTest do
+  use EcallWeb.ConnCase, async: true
+
+  test "GET /api/health", %{conn: conn} do
+    conn = get(conn, ~p"/api/health")
+    assert json_response(conn, 200) == %{"status" => "ok"}
+  end
+end

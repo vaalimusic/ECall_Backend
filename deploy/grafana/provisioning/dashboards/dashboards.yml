@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: ECall
+    orgId: 1
+    folder: ECall
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

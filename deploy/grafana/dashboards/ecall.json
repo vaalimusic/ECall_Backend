@@ -1,0 +1,19 @@
+{
+  "title": "ECall Backend",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Active calls",
+      "targets": [{"expr": "ecall_calls_active_count"}],
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+    },
+    {
+      "type": "timeseries",
+      "title": "Signaling events",
+      "targets": [{"expr": "rate(ecall_signaling_event_count_total[1m])"}],
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
+    }
+  ]
+}
