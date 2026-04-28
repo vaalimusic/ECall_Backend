@@ -15,4 +15,10 @@ defmodule Ecall.CallsTest do
     assert {:ok, {:reused, reused_call}} = Calls.initiate("1", %{"to" => "2", "media" => "video"})
     assert reused_call.id == call.id
   end
+
+  test "ends call without crashing" do
+    assert {:ok, {:created, call}} = Calls.initiate("1", %{"to" => "2", "media" => "video"})
+    assert {:ok, ended_call} = Calls.handle_event(call.id, "1", "call:end", %{})
+    assert ended_call.status == :ended
+  end
 end

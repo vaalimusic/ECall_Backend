@@ -79,9 +79,7 @@ defmodule Ecall.Calls do
   def handle_event(call_id, user_id, "call:end", _payload) do
     now = DateTime.utc_now()
 
-    call_id
-    |> Repo.get(Call)
-    |> case do
+    case Repo.get(Call, call_id) do
       nil ->
         {:error, :not_found}
 
@@ -97,9 +95,7 @@ defmodule Ecall.Calls do
   def handle_event(_call_id, _user_id, _event, _payload), do: :ok
 
   def mark_timeout(call_id) do
-    call_id
-    |> Repo.get(Call)
-    |> case do
+    case Repo.get(Call, call_id) do
       %Call{status: status} = call when status in [:ringing, :initiated] ->
         call
         |> Call.changeset(%{status: :missed, ended_at: DateTime.utc_now()})
