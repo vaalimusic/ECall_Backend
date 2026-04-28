@@ -8,6 +8,8 @@ Connect with JWT access token:
 wss://ecall.everty.ru/socket/websocket?token=<JWT_ACCESS_TOKEN>&vsn=2.0.0
 ```
 
+Use the raw JWT in `token`. REST uses `Authorization: Bearer <JWT_ACCESS_TOKEN>`, but the WebSocket query value should not include the `Bearer ` prefix.
+
 Channels:
 
 - `user:{id}`: user presence, incoming calls, messages.

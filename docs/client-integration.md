@@ -15,6 +15,14 @@ Content-Type: application/json
 
 Use the returned `access_token` for REST and WebSocket. The JWT contains `sub=<user_id>` and expires after 1 hour. Use `refresh_token` with `/api/auth/refresh` to rotate and receive a new token pair.
 
+For WebSocket, pass the raw token in query params:
+
+```text
+wss://ecall.everty.ru/socket/websocket?token=<access_token>&vsn=2.0.0
+```
+
+Do not prefix the query value with `Bearer `. `Authorization: Bearer <access_token>` is for REST requests. The backend also accepts `access_token=<token>` and will tolerate `Bearer <token>` during socket auth, but raw `token=<access_token>` is the primary contract.
+
 A Phoenix signed token is also accepted for test tooling. For local load tests only, set `ALLOW_INSECURE_SOCKET_AUTH=true` and pass `user_id` directly.
 
 ## WebRTC Flow

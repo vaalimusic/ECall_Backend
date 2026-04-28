@@ -43,7 +43,7 @@ POST /api/auth/login
 ```
 
 4. Use `Authorization: Bearer <access_token>` for REST.
-5. Use the same `access_token` in the WebSocket URL.
+5. Use the same raw `access_token` in the WebSocket URL query param. Do not put `Bearer ` in the query value.
 6. Before or after expiry, call `/api/auth/refresh` with `refresh_token`. Replace both old tokens with the new pair.
 7. On logout, call `/api/auth/logout` and delete local tokens.
 
