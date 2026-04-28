@@ -10,7 +10,7 @@ Phoenix backend for WebRTC signaling, presence, push notifications and messaging
 - `call:{call_id}` channel for call control, SDP and ICE relay.
 - PostgreSQL schemas and migrations for calls, messages and device tokens.
 - Push notification abstraction with FCM client and dev log client.
-- Docker Compose stack with Postgres, Redis, CoTURN, Nginx, Prometheus and Grafana.
+- Docker Compose stack with Postgres, Redis, CoTURN, Caddy HTTPS, Prometheus and Grafana.
 - REST fallback endpoints and docs in `docs/`.
 - Android handoff guide: `docs/android-handoff.md`.
 

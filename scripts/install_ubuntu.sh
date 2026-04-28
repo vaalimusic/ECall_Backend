@@ -81,31 +81,21 @@ EOF_ENV
   chmod 600 "${env_file}"
 }
 
-write_nginx_config() {
-  log "Writing Nginx config for ${DOMAIN}"
-  cat > "${INSTALL_DIR}/deploy/nginx/ecall.conf" <<EOF_NGINX
-map \$http_upgrade \$connection_upgrade {
-  default upgrade;
-  '' close;
-}
+write_caddy_config() {
+  log "Writing Caddy config for ${DOMAIN}"
+  mkdir -p "${INSTALL_DIR}/deploy/caddy"
+  cat > "${INSTALL_DIR}/deploy/caddy/Caddyfile" <<EOF_CADDY
+${DOMAIN} {
+  encode gzip
 
-server {
-  listen 80;
-  server_name ${DOMAIN};
-
-  location / {
-    proxy_pass http://app:4000;
-    proxy_http_version 1.1;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto \$scheme;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection \$connection_upgrade;
-    proxy_read_timeout 3600s;
+  reverse_proxy app:4000 {
+    header_up Host {host}
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Forwarded-Proto {scheme}
   }
 }
-EOF_NGINX
+EOF_CADDY
 }
 
 open_firewall_ports() {
@@ -130,7 +120,7 @@ start_stack() {
   log "Health check"
   for _ in $(seq 1 30); do
     if curl -fsS "http://127.0.0.1/api/health" >/dev/null; then
-      log "Installed successfully: http://${DOMAIN}/api/health"
+      log "Installed successfully: https://${DOMAIN}/api/health"
       return
     fi
     sleep 2
@@ -142,6 +132,6 @@ start_stack() {
 install_docker
 fetch_repo
 write_env
-write_nginx_config
+write_caddy_config
 open_firewall_ports
 start_stack
