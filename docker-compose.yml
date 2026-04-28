@@ -2,11 +2,11 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ecall_dev
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ecall_prod}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,11 +18,11 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
   coturn:
     image: coturn/coturn:4.6
-    command: ["-n", "--log-file=stdout", "--lt-cred-mech", "--realm=ecall.everty.ru", "--user=ecall:change-me", "--min-port=49160", "--max-port=49200"]
+    command: ["-n", "--log-file=stdout", "--lt-cred-mech", "--realm=${PHX_HOST:-ecall.everty.ru}", "--user=${TURN_USER:-ecall}:${TURN_PASSWORD:-change-me}", "--min-port=49160", "--max-port=49200"]
     ports:
       - "3478:3478/udp"
       - "3478:3478/tcp"
@@ -34,13 +34,13 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: ecto://postgres:postgres@postgres/ecall_dev
-      SECRET_KEY_BASE: replace-with-64-byte-secret
-      JWT_SECRET: replace-with-jwt-hs256-secret
-      PHX_HOST: ecall.everty.ru
+      DATABASE_URL: ecto://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres/${POSTGRES_DB:-ecall_prod}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      JWT_SECRET: ${JWT_SECRET}
+      PHX_HOST: ${PHX_HOST:-ecall.everty.ru}
       PORT: "4000"
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"
 
   nginx:
     image: nginx:1.27-alpine
@@ -58,7 +58,7 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
 
   grafana:
     image: grafana/grafana:11.2.0
@@ -66,7 +66,7 @@ services:
       - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
 volumes:
   postgres_data:

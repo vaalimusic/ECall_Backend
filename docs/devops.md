@@ -14,11 +14,22 @@ docker compose exec app /app/bin/migrate
 
 ## Ubuntu 22.04 Deployment
 
-1. Install Docker and Docker Compose.
-2. Copy `.env.example` to `.env` and set real secrets.
-3. Point DNS for `ecall.everty.ru` to the server.
-4. Replace the Nginx HTTP-only config with a Let's Encrypt TLS config or terminate TLS before Nginx.
-5. Run `docker compose up -d --build`.
+One-command install from a clean server:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vaalimusic/ECall_Backend/main/scripts/install_ubuntu.sh | sudo DOMAIN=ecall.everty.ru bash
+```
+
+The script installs Docker, clones the repository into `/opt/ecall-backend`, creates `.env`, starts Docker Compose and runs migrations.
+
+Manual update after changes are pushed:
+
+```bash
+cd /opt/ecall-backend
+sudo git pull --ff-only
+sudo docker compose up -d --build
+sudo docker compose exec -T app /app/bin/ecall eval "Ecall.Release.migrate()"
+```
 
 ## Scaling
 
