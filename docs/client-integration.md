@@ -39,6 +39,10 @@ The backend does not terminate media. It relays signaling only; browsers or mobi
 
 The client must join only the current `call:{call_id}` once per call screen. Repeated joins to many different `call_id` values usually mean the app is repeatedly calling `call:initiate` or recreating the call screen/socket subscription. The backend reuses an active call for the same two users, but the client should still debounce the call button and leave the channel after `call:end`.
 
+## Messaging Flow
+
+After login, keep the socket connected and joined to `user:{id}` globally, not only on the chat screen. Incoming messages are delivered as `message:new` on `user:{recipient_id}`. Sending through `POST /api/messages` also broadcasts `message:new` to the recipient when they are online.
+
 ## Example SDP
 
 ```json

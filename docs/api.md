@@ -82,6 +82,8 @@ All endpoints except `health`, `metrics`, `auth/register`, `auth/login`, `auth/r
 Authorization: Bearer <JWT_ACCESS_TOKEN>
 ```
 
+`POST /api/messages` stores the message and broadcasts `message:new` to `user:{recipient_id}` when the recipient is online.
+
 Auth response:
 
 ```json
