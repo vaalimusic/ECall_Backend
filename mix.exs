@@ -7,6 +7,7 @@ defmodule Ecall.MixProject do
       version: "0.1.0",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
+      erlc_paths: ["src"],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -41,6 +42,7 @@ defmodule Ecall.MixProject do
       {:cors_plug, "~> 3.0"},
       {:prom_ex, "~> 1.9"},
       {:hammer, "~> 6.2"},
+      {:libcluster, "~> 3.3"},
       {:finch, "~> 0.19"},
       {:mox, "~> 1.2", only: :test}
     ]

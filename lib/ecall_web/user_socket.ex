@@ -15,6 +15,7 @@ defmodule EcallWeb.UserSocket do
         connect_insecure(user_id, socket)
 
       true ->
+        Ecall.Metrics.inc(:websocket_auth_rejected_total)
         Logger.warning("websocket auth rejected: missing token")
         :error
     end
@@ -29,6 +30,7 @@ defmodule EcallWeb.UserSocket do
         {:ok, assign(socket, :user_id, to_string(user_id))}
 
       {:error, reason} ->
+        Ecall.Metrics.inc(:websocket_auth_rejected_total)
         Logger.warning("websocket auth rejected: #{inspect(reason)}")
         :error
     end
@@ -38,6 +40,7 @@ defmodule EcallWeb.UserSocket do
     if System.get_env("ALLOW_INSECURE_SOCKET_AUTH") == "true" do
       {:ok, assign(socket, :user_id, to_string(user_id))}
     else
+      Ecall.Metrics.inc(:websocket_auth_rejected_total)
       Logger.warning("websocket auth rejected: insecure user_id auth is disabled")
       :error
     end

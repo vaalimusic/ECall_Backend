@@ -18,7 +18,7 @@ RUN mix release ecall
 
 FROM ubuntu:22.04 AS app
 
-RUN apt-get update && apt-get install -y --no-install-recommends openssl libstdc++6 ncurses-bin ca-certificates locales \
+RUN apt-get update && apt-get install -y --no-install-recommends openssl libstdc++6 ncurses-bin ca-certificates locales curl \
   && rm -rf /var/lib/apt/lists/*
 
 RUN locale-gen C.UTF-8 || true
@@ -30,4 +30,5 @@ ENV HOME=/app
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 ENV ELIXIR_ERL_OPTIONS="+fnu"
+ENV RELEASE_DISTRIBUTION=name
 CMD ["/app/bin/ecall", "start"]

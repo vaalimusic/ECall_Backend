@@ -10,6 +10,7 @@ defmodule Ecall.Calls.Call do
     field :callee_id, :string
     field :media_type, Ecto.Enum, values: [:audio, :video]
     field :status, Ecto.Enum, values: [:initiated, :ringing, :accepted, :rejected, :busy, :ended, :timeout, :missed]
+    field :client_call_id, :string
     field :started_at, :utc_datetime_usec
     field :answered_at, :utc_datetime_usec
     field :ended_at, :utc_datetime_usec
@@ -21,8 +22,11 @@ defmodule Ecall.Calls.Call do
 
   def changeset(call, attrs) do
     call
-    |> cast(attrs, [:caller_id, :callee_id, :media_type, :status, :started_at, :answered_at, :ended_at, :duration_seconds, :metadata])
+    |> cast(attrs, [:caller_id, :callee_id, :media_type, :status, :client_call_id, :started_at, :answered_at, :ended_at, :duration_seconds, :metadata])
     |> validate_required([:caller_id, :callee_id, :media_type, :status, :started_at])
+    |> validate_length(:client_call_id, max: 128)
     |> validate_number(:duration_seconds, greater_than_or_equal_to: 0)
+    |> unique_constraint(:client_call_id, name: :calls_caller_client_call_id_unique)
+    |> unique_constraint(:caller_id, name: :calls_one_active_between_users_per_media)
   end
 end

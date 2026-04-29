@@ -74,7 +74,6 @@ defmodule Ecall.Calls.Registry do
   def handle_info({:timeout, call_id}, state) do
     Task.start(fn ->
       Ecall.Calls.mark_timeout(call_id)
-      EcallWeb.Endpoint.broadcast("call:#{call_id}", "call:timeout", %{"call_id" => call_id})
     end)
 
     {:noreply, update_in(state.calls, &Map.delete(&1, call_id))}

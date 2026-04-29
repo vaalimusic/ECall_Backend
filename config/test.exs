@@ -14,4 +14,7 @@ config :ecall, EcallWeb.Endpoint,
   server: false
 
 config :ecall, Ecall.Push.FcmClient, adapter: Ecall.Push.MockClient
+config :ecall, Ecall.Calls.TimeoutWorker, enabled: false
+config :ecall, Ecall.Calls.ParticipantSweeper, enabled: false
+config :ecall, Ecall.Push.RetryWorker, enabled: false
 config :logger, level: :warning

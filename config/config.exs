@@ -2,7 +2,8 @@ import Config
 
 config :ecall,
   ecto_repos: [Ecall.Repo],
-  generators: [timestamp_type: :utc_datetime_usec]
+  generators: [timestamp_type: :utc_datetime_usec],
+  cluster_min_size: 1
 
 config :ecall, EcallWeb.Endpoint,
   url: [host: "localhost"],

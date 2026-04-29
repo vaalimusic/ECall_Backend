@@ -9,7 +9,10 @@ defmodule EcallWeb.UserChannel do
     {:ok, %{user_id: user_id}, socket}
   end
 
-  def join("user:" <> _user_id, _payload, _socket), do: {:error, %{reason: "forbidden"}}
+  def join("user:" <> _user_id, _payload, _socket) do
+    Ecall.Metrics.inc(:channel_join_forbidden_total)
+    {:error, %{reason: "forbidden"}}
+  end
 
   @impl true
   def handle_info(:after_join, socket) do
@@ -28,7 +31,7 @@ defmodule EcallWeb.UserChannel do
   @impl true
   def handle_in("call:initiate", payload, socket) do
     with {:ok, {state, call}} <- Calls.initiate(socket.assigns.user_id, payload) do
-      event = %{"call_id" => call.id, "from" => call.caller_id, "media" => call.media_type}
+      event = %{"call_id" => call.id, "client_call_id" => call.client_call_id, "from" => call.caller_id, "media" => call.media_type}
 
       if state == :created do
         EcallWeb.Endpoint.broadcast("user:#{call.callee_id}", "call:ringing", event)
@@ -37,18 +40,31 @@ defmodule EcallWeb.UserChannel do
 
       {:reply, {:ok, event}, socket}
     else
-      {:error, reason} -> {:reply, {:error, %{reason: inspect(reason)}}, socket}
+      {:error, reason} -> {:reply, {:error, call_error(reason)}, socket}
     end
   end
 
   def handle_in("message:new", payload, socket) do
-    with {:ok, message} <- Messaging.create_message(socket.assigns.user_id, payload) do
+    with {:ok, state, message} <- Messaging.create_message_with_status(socket.assigns.user_id, payload) do
       event = Messaging.to_payload(message)
-      EcallWeb.Endpoint.broadcast("user:#{message.recipient_id}", "message:new", event)
-      maybe_push_message(message)
+      if state == :created do
+        EcallWeb.Endpoint.broadcast("user:#{message.recipient_id}", "message:new", event)
+        maybe_push_message(message)
+      end
+
       {:reply, {:ok, event}, socket}
     else
       {:error, changeset} -> {:reply, {:error, %{errors: EcallWeb.ChangesetJSON.errors(changeset)}}, socket}
+    end
+  end
+
+  def handle_in("call:ringing_ack", %{"call_id" => call_id}, socket) do
+    case Calls.ringing_ack(call_id, socket.assigns.user_id) do
+      {:ok, call} ->
+        {:reply, {:ok, %{"call_id" => call.id, "status" => to_string(call.status)}}, socket}
+
+      {:error, reason} ->
+        {:reply, {:error, call_error(reason)}, socket}
     end
   end
 
@@ -73,4 +89,10 @@ defmodule EcallWeb.UserChannel do
       Push.deliver(message.recipient_id, :new_message, %{message_id: message.id, from: message.sender_id})
     end
   end
+
+  defp call_error({:server_overloaded, detail}), do: %{reason: "server_overloaded", detail: to_string(detail)}
+  defp call_error(:rate_limited), do: %{reason: "rate_limited"}
+  defp call_error(:callee_busy), do: %{reason: "callee_busy"}
+  defp call_error(:caller_has_active_call), do: %{reason: "caller_has_active_call"}
+  defp call_error(reason), do: %{reason: inspect(reason)}
 end

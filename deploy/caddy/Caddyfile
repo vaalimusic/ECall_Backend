@@ -1,6 +1,8 @@
 {$PHX_HOST:ecall.everty.ru} {
   encode gzip
 
+  respond /metrics 404
+
   reverse_proxy app:4000 {
     header_up Host {host}
     header_up X-Real-IP {remote_host}

@@ -6,3 +6,4 @@ erl_crash.dump
 *.beam
 .env
 cover/
+backups/

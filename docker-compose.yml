@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -10,18 +11,25 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     ports:
       - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   coturn:
     image: coturn/coturn:4.6
+    restart: unless-stopped
     command: ["-n", "--log-file=stdout", "--lt-cred-mech", "--realm=${PHX_HOST:-ecall.everty.ru}", "--user=${TURN_USER:-ecall}:${TURN_PASSWORD:-change-me}", "--min-port=49160", "--max-port=49200"]
     ports:
       - "3478:3478/udp"
@@ -30,6 +38,7 @@ services:
 
   app:
     build: .
+    restart: unless-stopped
     dns:
       - 1.1.1.1
       - 8.8.8.8
@@ -41,17 +50,35 @@ services:
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       JWT_SECRET: ${JWT_SECRET}
       PHX_HOST: ${PHX_HOST:-ecall.everty.ru}
+      TURN_HOST: ${TURN_HOST:-${PHX_HOST:-ecall.everty.ru}}
+      TURN_PORT: ${TURN_PORT:-3478}
+      TURN_USER: ${TURN_USER:-ecall}
+      TURN_PASSWORD: ${TURN_PASSWORD:-change-me}
+      STUN_URLS: ${STUN_URLS:-}
+      TURN_URLS: ${TURN_URLS:-}
+      RELEASE_COOKIE: ${RELEASE_COOKIE:-change-me-cluster-cookie}
+      CLUSTER_ENABLED: ${CLUSTER_ENABLED:-false}
+      CLUSTER_SECRET: ${CLUSTER_SECRET:-}
+      CLUSTER_MIN_SIZE: ${CLUSTER_MIN_SIZE:-1}
       PORT: "4000"
-    ports:
-      - "127.0.0.1:4000:4000"
+    expose:
+      - "4000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:4000/api/health/ready >/dev/null"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
 
   caddy:
     image: caddy:2.8-alpine
+    restart: unless-stopped
     dns:
       - 1.1.1.1
       - 8.8.8.8
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"
@@ -62,6 +89,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v2.55.0
+    restart: unless-stopped
     dns:
       - 1.1.1.1
       - 8.8.8.8
@@ -72,6 +100,7 @@ services:
 
   grafana:
     image: grafana/grafana:11.2.0
+    restart: unless-stopped
     volumes:
       - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro

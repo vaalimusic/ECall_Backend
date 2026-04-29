@@ -1,5 +1,18 @@
 import Config
 
+parse_integer_env = fn name, default ->
+  case System.get_env(name) do
+    nil ->
+      default
+
+    value ->
+      case Integer.parse(value) do
+        {integer, ""} when integer > 0 -> integer
+        _ -> default
+      end
+  end
+end
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
@@ -10,11 +23,11 @@ if config_env() == :prod do
       raise "SECRET_KEY_BASE is required"
 
   host = System.get_env("PHX_HOST", "ecall.everty.ru")
-  port = String.to_integer(System.get_env("PORT", "4000"))
+  port = parse_integer_env.("PORT", 4000)
 
   config :ecall, Ecall.Repo,
     url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE", "20")),
+    pool_size: parse_integer_env.("POOL_SIZE", 20),
     ssl: System.get_env("ECTO_SSL", "false") == "true"
 
   config :ecall, EcallWeb.Endpoint,
@@ -33,4 +46,37 @@ if config_env() == :prod do
     adapter: Ecall.Push.FcmClient,
     project_id: System.get_env("FCM_PROJECT_ID"),
     access_token: System.get_env("FCM_ACCESS_TOKEN")
+
+  config :ecall,
+    cluster_min_size: parse_integer_env.("CLUSTER_MIN_SIZE", 1)
+
+  config :ecall, Ecall.Admission,
+    max_active_calls: parse_integer_env.("MAX_ACTIVE_CALLS", 10_000),
+    max_processes: parse_integer_env.("MAX_BEAM_PROCESSES", 200_000),
+    max_run_queue: parse_integer_env.("MAX_BEAM_RUN_QUEUE", 256),
+    max_memory_bytes: parse_integer_env.("MAX_BEAM_MEMORY_BYTES", 0),
+    call_initiate_interval_ms: parse_integer_env.("CALL_INITIATE_INTERVAL_MS", 1_200)
+
+  config :ecall, Ecall.Calls.ParticipantSweeper,
+    stale_after_seconds: parse_integer_env.("CALL_PARTICIPANT_STALE_AFTER_SECONDS", 45),
+    interval_ms: parse_integer_env.("CALL_PARTICIPANT_SWEEP_INTERVAL_MS", 15_000)
+
+  if System.get_env("CLUSTER_ENABLED", "false") == "true" do
+    cluster_secret =
+      System.get_env("CLUSTER_SECRET") ||
+        System.get_env("RELEASE_COOKIE") ||
+        secret_key_base
+
+    config :libcluster,
+      topologies: [
+        ecall_gossip: [
+          strategy: Cluster.Strategy.Gossip,
+          config: [
+            secret: cluster_secret
+          ]
+        ]
+      ]
+  else
+    config :libcluster, topologies: []
+  end
 end

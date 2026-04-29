@@ -100,8 +100,16 @@ SECRET_KEY_BASE=$(random_secret)$(random_secret)
 JWT_SECRET=$(random_secret)
 PHX_HOST=${DOMAIN}
 PORT=4000
+TURN_HOST=${DOMAIN}
+TURN_PORT=3478
 TURN_USER=ecall
 TURN_PASSWORD=$(random_secret)
+STUN_URLS=
+TURN_URLS=
+RELEASE_COOKIE=$(random_secret)
+CLUSTER_ENABLED=false
+CLUSTER_SECRET=
+CLUSTER_MIN_SIZE=1
 FCM_PROJECT_ID=
 FCM_ACCESS_TOKEN=
 ALLOW_INSECURE_SOCKET_AUTH=false
@@ -115,6 +123,8 @@ write_caddy_config() {
   cat > "${INSTALL_DIR}/deploy/caddy/Caddyfile" <<EOF_CADDY
 ${DOMAIN} {
   encode gzip
+
+  respond /metrics 404
 
   reverse_proxy app:4000 {
     header_up Host {host}
