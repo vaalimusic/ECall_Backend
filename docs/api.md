@@ -62,6 +62,14 @@ Example ICE payload:
 {"candidate":"candidate:...","sdpMid":"0","sdpMLineIndex":0}
 ```
 
+Call state rules:
+
+- `call:accept`, `call:reject` and `call:busy` are valid only while the call is `ringing`.
+- Only the callee can send `call:accept`, `call:reject` or `call:busy`.
+- Either participant can send `call:end` while the call is `ringing` or `accepted`.
+- Terminal calls cannot be accepted or ended again.
+- After `ended`, `rejected`, `busy` or `missed`, a new `call:initiate` creates a new `call_id`.
+
 ## REST
 
 - `GET /api/health`

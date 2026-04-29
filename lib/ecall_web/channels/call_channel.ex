@@ -7,11 +7,11 @@ defmodule EcallWeb.CallChannel do
 
   @impl true
   def join("call:" <> call_id, _payload, socket) do
-    if Calls.participant?(call_id, socket.assigns.user_id) do
+    if Calls.joinable?(call_id, socket.assigns.user_id) do
       Calls.join(call_id, socket.assigns.user_id)
       {:ok, %{call_id: call_id}, assign(socket, :call_id, call_id)}
     else
-      {:error, %{reason: "forbidden"}}
+      {:error, %{reason: "forbidden_or_inactive_call"}}
     end
   end
 
@@ -21,8 +21,11 @@ defmodule EcallWeb.CallChannel do
     call_id = socket.assigns.call_id
     user_id = socket.assigns.user_id
 
-    Calls.handle_event(call_id, user_id, event, payload)
-    broadcast_from!(socket, event, Map.merge(payload, %{"from" => user_id, "call_id" => call_id}))
+    result = Calls.handle_event(call_id, user_id, event, payload)
+
+    if signaling_event?(event) and result == :ok do
+      broadcast_from!(socket, event, Map.merge(payload, %{"from" => user_id, "call_id" => call_id}))
+    end
 
     :telemetry.execute(
       [:ecall, :signaling, :event],
@@ -30,7 +33,10 @@ defmodule EcallWeb.CallChannel do
       %{event: event, call_id: call_id}
     )
 
-    {:reply, :ok, socket}
+    case result do
+      {:error, reason} -> {:reply, {:error, %{reason: inspect(reason)}}, socket}
+      _ -> {:reply, :ok, socket}
+    end
   end
 
   def handle_in(_event, _payload, socket), do: {:reply, {:error, %{reason: "unsupported_event"}}, socket}
@@ -40,4 +46,6 @@ defmodule EcallWeb.CallChannel do
     if socket.assigns[:call_id], do: Calls.leave(socket.assigns.call_id, socket.assigns.user_id)
     :ok
   end
+
+  defp signaling_event?(event), do: event in ~w(call:mute call:unmute call:video_on call:video_off call:switch_camera webrtc:offer webrtc:answer webrtc:ice)
 end
