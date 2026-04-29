@@ -171,8 +171,13 @@ defmodule Ecall.Calls do
   defp ensure_actor(%Call{callee_id: user_id}, user_id, :callee), do: :ok
   defp ensure_actor(_call, _user_id, _actor), do: {:error, :forbidden_actor}
 
-  defp ensure_status(%Call{status: status}, allowed_from) when status in allowed_from, do: :ok
-  defp ensure_status(%Call{status: status}, _allowed_from), do: {:error, {:invalid_transition, status}}
+  defp ensure_status(%Call{status: status}, allowed_from) do
+    if status in allowed_from do
+      :ok
+    else
+      {:error, {:invalid_transition, status}}
+    end
+  end
 
   defp update_call(%Call{} = call, new_status, attrs) do
     attrs =

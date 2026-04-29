@@ -17,7 +17,9 @@ defmodule Ecall.Auth do
     end)
   end
 
-  def login(%{"email" => email, "password" => password}, meta \\ %{}) do
+  def login(attrs, meta \\ %{})
+
+  def login(%{"email" => email, "password" => password}, meta) do
     user = get_user_by_email(email)
 
     cond do
