@@ -12,6 +12,7 @@ RUN mix deps.get --only prod && mix deps.compile
 
 COPY config config
 COPY lib lib
+COPY src src
 COPY priv priv
 COPY rel rel
 RUN mix release ecall
