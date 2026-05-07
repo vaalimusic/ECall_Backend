@@ -5,9 +5,9 @@ defmodule Ecall.Auth.Token do
     now = System.os_time(:second)
 
     claims =
-      extra_claims
-      |> Map.merge(%{
+      %{
         "aud" => "ECall",
+        "active" => true,
         "exp" => now + @access_token_ttl_seconds,
         "iat" => now,
         "iss" => "ECall",
@@ -15,7 +15,9 @@ defmodule Ecall.Auth.Token do
         "nbf" => now,
         "sub" => to_string(user_id),
         "typ" => "access"
-      })
+      }
+      |> Map.merge(extra_claims)
+      |> Map.merge(%{"sub" => to_string(user_id), "typ" => "access"})
 
     token =
       %{"alg" => "HS256", "typ" => "JWT"}
@@ -27,10 +29,17 @@ defmodule Ecall.Auth.Token do
   end
 
   def verify(token) do
+    case verify_with_claims(token) do
+      {:ok, user_id, _claims} -> {:ok, user_id}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def verify_with_claims(token) do
     with {:ok, claims} <- verify_claims(token),
          :ok <- validate_claims(claims),
          %{"sub" => user_id} when is_binary(user_id) <- claims do
-      {:ok, user_id}
+      {:ok, user_id, claims}
     else
       {:error, reason} -> {:error, reason}
       _ -> {:error, :invalid_subject}
@@ -59,12 +68,13 @@ defmodule Ecall.Auth.Token do
     |> Kernel.||("dev-jwt-secret-change-me")
   end
 
-  defp validate_claims(%{"exp" => exp, "nbf" => nbf, "typ" => "access"}) do
+  defp validate_claims(%{"exp" => exp, "nbf" => nbf, "typ" => "access"} = claims) do
     now = System.os_time(:second)
 
     cond do
       not is_integer(exp) or exp <= now -> {:error, :token_expired}
       is_integer(nbf) and nbf > now -> {:error, :token_not_yet_valid}
+      Map.get(claims, "active") != true -> {:error, :user_disabled}
       true -> :ok
     end
   end

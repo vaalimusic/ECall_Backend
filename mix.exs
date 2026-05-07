@@ -38,6 +38,7 @@ defmodule Ecall.MixProject do
       {:jason, "~> 1.4"},
       {:joken, "~> 2.6"},
       {:argon2_elixir, "~> 4.0"},
+      {:goth, "~> 1.4"},
       {:plug_cowboy, "~> 2.7"},
       {:cors_plug, "~> 3.0"},
       {:prom_ex, "~> 1.9"},

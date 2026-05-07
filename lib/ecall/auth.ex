@@ -111,7 +111,10 @@ defmodule Ecall.Auth do
     {:ok, access_token, claims} =
       Token.generate(user.id, %{
         "typ" => "access",
-        "email" => user.email
+        "email" => user.email,
+        "phone" => user.phone,
+        "display_name" => user.display_name,
+        "active" => is_nil(user.disabled_at)
       })
 
     raw_refresh_token = generate_refresh_token()

@@ -13,6 +13,7 @@ defmodule Ecall.Application do
       timeout_worker_child(),
       participant_sweeper_child(),
       push_retry_worker_child(),
+      goth_child(),
       EcallWeb.Telemetry,
       {Finch, name: Ecall.Finch},
       EcallWeb.Endpoint
@@ -50,6 +51,13 @@ defmodule Ecall.Application do
 
     if Keyword.get(opts, :enabled, true) do
       Ecall.Push.RetryWorker
+    end
+  end
+
+  defp goth_child do
+    case Application.get_env(:ecall, Ecall.Goth, [])[:source] do
+      nil -> nil
+      source -> {Goth, name: Ecall.Goth, source: source}
     end
   end
 

@@ -47,6 +47,13 @@ if config_env() == :prod do
     project_id: System.get_env("FCM_PROJECT_ID"),
     access_token: System.get_env("FCM_ACCESS_TOKEN")
 
+  if service_account_json = System.get_env("FCM_SERVICE_ACCOUNT_JSON") do
+    config :ecall, Ecall.Goth,
+      source:
+        {:service_account, Jason.decode!(service_account_json),
+         scopes: ["https://www.googleapis.com/auth/firebase.messaging"]}
+  end
+
   config :ecall,
     cluster_min_size: parse_integer_env.("CLUSTER_MIN_SIZE", 1)
 

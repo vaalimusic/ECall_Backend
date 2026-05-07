@@ -3,13 +3,22 @@ defmodule EcallWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug EcallWeb.RateLimitPlug
   end
 
   pipeline :authenticated do
     plug EcallWeb.AuthPlug
   end
 
-  get "/metrics", EcallWeb.MetricsController, :show
+  pipeline :internal do
+    plug EcallWeb.MetricsAuthPlug
+  end
+
+  scope "/" do
+    pipe_through :internal
+
+    get "/metrics", EcallWeb.MetricsController, :show
+  end
 
   scope "/api", EcallWeb do
     pipe_through :api

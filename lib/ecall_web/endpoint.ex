@@ -9,6 +9,5 @@ defmodule EcallWeb.Endpoint do
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
   plug CORSPlug
   plug Plug.Parsers, parsers: [:urlencoded, :multipart, :json], json_decoder: Phoenix.json_library()
-  plug EcallWeb.RateLimitPlug
   plug EcallWeb.Router
 end

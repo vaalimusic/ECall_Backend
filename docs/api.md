@@ -207,4 +207,4 @@ POST /api/users/{myUserId}/device_tokens
 - `GET /api/health/live`
 - `GET /api/health/ready`
 - `GET /api/health/turn`
-- `GET /metrics`
+- `GET /metrics` with Basic Auth, for internal monitoring only

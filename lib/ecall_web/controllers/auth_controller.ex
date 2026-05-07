@@ -55,7 +55,7 @@ defmodule EcallWeb.AuthController do
   def logout(conn, _params), do: send_resp(conn, 204, "")
 
   def me(conn, _params) do
-    json(conn, %{user: Auth.public_user(conn.assigns.current_user)})
+    json(conn, %{user: conn.assigns.current_user})
   end
 
   defp session_json(session) do

@@ -69,7 +69,7 @@ Keep private 1:1 communication available during infrastructure failures, deploys
 - Add Docker restart policies and app healthcheck. Done.
 - Document operational health commands. Done.
 - Add a Postgres backup and restore drill. Started.
-- Restrict public access to metrics in production. Started: Caddy blocks public `/metrics`; Prometheus still scrapes `app:4000` internally.
+- Restrict public access to metrics in production. Done: Caddy blocks public `/metrics`, Phoenix requires Basic Auth, and Prometheus scrapes `app:4000` with credentials internally.
 - Add a Docker-based local test path for machines without Elixir installed.
 
 ## Phase 2: Multi-Instance Readiness

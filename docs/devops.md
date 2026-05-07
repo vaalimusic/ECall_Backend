@@ -87,7 +87,7 @@ scripts/restore_postgres.sh /secure/ecall-backups/ecall_ecall_prod_YYYYMMDDTHHMM
 
 ## Push Delivery
 
-FCM delivery outcomes are exposed in `/metrics`:
+FCM delivery outcomes are exposed in `/metrics`. The endpoint requires Basic Auth inside the Phoenix app and is also blocked from the public Caddy vhost:
 
 - `ecall_push_delivered_total`
 - `ecall_push_failed_total`
@@ -97,6 +97,8 @@ FCM delivery outcomes are exposed in `/metrics`:
 - `ecall_push_retry_pending_count`
 
 Invalid FCM tokens are deleted automatically. Retryable FCM failures are stored in `push_jobs` and retried by `Ecall.Push.RetryWorker` with backoff. Alert if `ecall_push_retry_pending_count` grows for more than a few minutes.
+
+Use `FCM_SERVICE_ACCOUNT_JSON` for production Firebase Cloud Messaging. When it is set, the backend fetches short-lived OAuth access tokens with Goth. `FCM_ACCESS_TOKEN` remains only as a fallback for temporary manual testing.
 
 ## Ubuntu 22.04 Deployment
 

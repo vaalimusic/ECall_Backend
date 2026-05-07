@@ -3,16 +3,17 @@ defmodule Ecall.Push.FcmClient do
 
   def deliver(device_token, type, payload) do
     project_id = Application.get_env(:ecall, __MODULE__)[:project_id]
-    access_token = Application.get_env(:ecall, __MODULE__)[:access_token]
 
-    if project_id && access_token do
-      request = build_request(project_id, access_token, device_token.token, type, payload)
-      request
+    with true <- present?(project_id),
+         {:ok, access_token} <- access_token() do
+      project_id
+      |> build_request(access_token, device_token.token, type, payload)
       |> Finch.request(Ecall.Finch)
       |> normalize_response()
     else
-      Logger.warning("FCM is not configured, skipping push type=#{type} user_id=#{device_token.user_id}")
-      :ok
+      _ ->
+        Logger.warning("FCM is not configured, skipping push type=#{type} user_id=#{device_token.user_id}")
+        :ok
     end
   end
 
@@ -21,6 +22,22 @@ defmodule Ecall.Push.FcmClient do
     body = Jason.encode!(%{message: %{token: token, data: stringify(Map.put(payload, :type, type))}})
 
     Finch.build(:post, url, [{"authorization", "Bearer #{access_token}"}, {"content-type", "application/json"}], body)
+  end
+
+  defp access_token do
+    cond do
+      Process.whereis(Ecall.Goth) ->
+        case Goth.fetch(Ecall.Goth) do
+          {:ok, token} -> {:ok, token.token}
+          {:error, reason} -> {:error, reason}
+        end
+
+      present?(Application.get_env(:ecall, __MODULE__)[:access_token]) ->
+        {:ok, Application.get_env(:ecall, __MODULE__)[:access_token]}
+
+      true ->
+        {:error, :missing_fcm_credentials}
+    end
   end
 
   defp normalize_response({:ok, %Finch.Response{status: status}}) when status in 200..299, do: :ok
@@ -58,4 +75,5 @@ defmodule Ecall.Push.FcmClient do
   defp invalid_token_error?(_decoded), do: false
 
   defp stringify(map), do: Map.new(map, fn {key, value} -> {to_string(key), to_string(value)} end)
+  defp present?(value), do: is_binary(value) and String.trim(value) != ""
 end
